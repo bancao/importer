@@ -1,6 +1,6 @@
-package com.excel.model;
+package com.importer.model;
 
-import com.excel.annotation.ExcelCell;
+import com.importer.annotation.ExcelCell;
 
 public class Contact {
 	@ExcelCell(columnName="First Name")

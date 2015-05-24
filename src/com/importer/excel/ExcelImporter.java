@@ -1,8 +1,7 @@
-package com.excel.client;
+package com.importer.excel;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -18,25 +17,12 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.util.IOUtils;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import com.excel.annotation.ExcelCell;
-import com.excel.model.Contact;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.importer.annotation.ExcelCell;
 
-public class ContactImporter {
-	
-	public static void main(String[] args) throws IOException,
-			InstantiationException, IllegalAccessException {
-		File file = new File("E:\\workspace\\excelImport\\src\\com\\excel\\client\\contacts.xls");
-		List<Object> contacts = new ContactImporter().importExcel(Contact.class, file);
-		for (Object object : contacts) {
-			Contact contact = (Contact) object;
-			System.out.println(contact.getFirstName());
-			System.out.println(contact.getLastName());
-		}
-	}
-	
-	public List<Object> importExcel(Class targetObjectClass, File file){
+public class ExcelImporter {
+	public static List<Object> importFile(Class targetObjectClass, File file) {
 		List<Object> objects = Lists.newArrayList();
 		Workbook book = null;
 		try {
@@ -67,13 +53,14 @@ public class ContactImporter {
 		return objects;
 	}
 
-	//TODO Need to set the value base on the field type(or add a need dataType property in CellType annotation)
-	private void invokeSetterMethod(Map<String, Method> setterMap,
+	// TODO Need to set the value base on the field type(or add a need dataType
+	// property in CellType annotation)
+	private static void invokeSetterMethod(Map<String, Method> setterMap,
 			Object object, Cell cell, String cellName)
 			throws IllegalAccessException, InvocationTargetException {
 		if (setterMap.containsKey(cellName)) {
 			Method setMethod = (Method) setterMap.get(cellName);
-			setMethod.invoke(object,cell.getStringCellValue());
+			setMethod.invoke(object, cell.getStringCellValue());
 		}
 	}
 
@@ -90,21 +77,24 @@ public class ContactImporter {
 		}
 		return titlemap;
 	}
-	
+
 	@SuppressWarnings("unchecked")
-	private static Map<String, Method> getSetterMap(Class targetObjectClass) throws NoSuchMethodException, SecurityException{
+	private static Map<String, Method> getSetterMap(Class targetObjectClass)
+			throws NoSuchMethodException, SecurityException {
 		Map<String, Method> result = Maps.newHashMap();
 		Field fields[] = targetObjectClass.getDeclaredFields();
 		for (Field field : fields) {
 			ExcelCell excel = field.getAnnotation(ExcelCell.class);
-			if(excel != null){
+			if (excel != null) {
 				String fieldName = field.getName();
-				String setMethodName = "set" + fieldName.substring(0,1).toUpperCase() + fieldName.substring(1);
-				Method method = targetObjectClass.getMethod(setMethodName, field.getType());
+				String setMethodName = "set"
+						+ fieldName.substring(0, 1).toUpperCase()
+						+ fieldName.substring(1);
+				Method method = targetObjectClass.getMethod(setMethodName,
+						field.getType());
 				result.put(excel.columnName(), method);
 			}
 		}
 		return result;
 	}
-
 }
